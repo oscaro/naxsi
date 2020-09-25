@@ -497,9 +497,9 @@ class ESInject(NxInjector):
                 entry['whitelisted'] = "false"
                 entry['comments'] = "import:"+str(datetime.datetime.now())
                 # go utf-8 ?
-                for x in list(entry.keys()):
-                    if isinstance(entry[x], str):
-                        entry[x] = str(entry[x], errors='replace')
+               #for x in list(entry.keys()):
+               #    if isinstance(entry[x], str):
+               #        entry[x] = str(entry[x], errors='replace')
                 items.append(entry)
                 count += 1
         mapfunc = partial(json.dumps, ensure_ascii=False)
