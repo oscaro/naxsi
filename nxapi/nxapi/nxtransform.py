@@ -67,7 +67,7 @@ class NxRating():
         elif score in list(self.stats[scope].keys()) and force_refresh is False:
             return self.stats[scope][score]
         else:
-            if score is not 'total':
+            if score != 'total':
                 self.stats[scope][score] = self.tr.fetch_uniques(self.esq[scope], score)['total']
             else:
                 res = self.tr.search(self.esq[scope])
