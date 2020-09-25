@@ -5,7 +5,7 @@ import time
 import glob
 import logging
 import string
-import urlparse
+import urllib.parse
 import itertools
 import gzip
 import bz2
@@ -64,7 +64,7 @@ class NxReader():
           host = self.sysloghost
           port = int(self.syslogport)
         else:
-          print "Unable to get syslog host and port"
+          print("Unable to get syslog host and port")
           sys.exit(1)
         s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -72,9 +72,9 @@ class NxReader():
           s.bind((host,port))
           s.listen(10)
         except socket.error as msg:
-          print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+          print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
           pass
-        print "Listening for syslog incoming "+host+" port "+ str(self.syslogport)
+        print("Listening for syslog incoming "+host+" port "+ str(self.syslogport))
         conn, addr = s.accept()
         syslog = conn.recv(1024)
         if syslog == '':
@@ -103,13 +103,13 @@ class NxReader():
             logging.info("Importing file "+lfile)
             try:
                 if lfile.endswith(".gz"):
-                    print "GZ open"
+                    print("GZ open")
                     fd = gzip.open(lfile, "rb")
                 elif lfile.endswith(".bz2"):
-                    print "BZ2 open"
+                    print("BZ2 open")
                     fd = bz2.BZ2File(lfile, "r")
                 else:
-                    print "log open"
+                    print("log open")
                     fd = open(lfile, "r")
             except:
                 logging.critical("Unable to open file : "+lfile)
@@ -267,8 +267,8 @@ class NxParser():
         clean = entry
 
         # NAXSI_EXLOG lines only have one triple (zone,id,var_name), but has non-empty content
-        if 'zone' in event.keys():
-            if 'var_name' in event.keys():
+        if 'zone' in list(event.keys()):
+            if 'var_name' in list(event.keys()):
                 entry['var_name'] = event['var_name']
             entry['zone'] = event['zone']
             entry['id'] = event['id']
@@ -277,21 +277,21 @@ class NxParser():
 
         # NAXSI_FMT can have many (zone,id,var_name), but does not have content
         # we iterate over triples.
-        elif 'zone0' in event.keys():
+        elif 'zone0' in list(event.keys()):
             commit = True
             for i in itertools.count():
                 entry = copy.deepcopy(clean)
                 zn = ''
                 vn = ''
                 rn = ''
-                if 'var_name' + str(i) in event.keys():
+                if 'var_name' + str(i) in list(event.keys()):
                     entry['var_name'] = event['var_name' + str(i)]
-                if 'zone' + str(i) in event.keys():
+                if 'zone' + str(i) in list(event.keys()):
                     entry['zone']  = event['zone' + str(i)]
                 else:
                     commit = False
                     break
-                if 'id' + str(i) in event.keys():
+                if 'id' + str(i) in list(event.keys()):
                     entry['id'] = event['id' + str(i)]
                 else:
                     commit = False
@@ -311,19 +311,19 @@ class NxParser():
     def tokenize_log(self, line):
         """Parses a naxsi exception to a dict,
         1 on error, 0 on success"""
-        odict = urlparse.parse_qs(line)
+        odict = urllib.parse.parse_qs(line)
         # one value per key, reduce.
-        for x in odict.keys():
+        for x in list(odict.keys()):
             odict[x][0] = odict[x][0].replace('\n', "\\n")
             odict[x][0] = odict[x][0].replace('\r', "\\r")
             odict[x] = odict[x][0]
         # check for incomplete/truncated lines
-        if 'zone0' in odict.keys():
+        if 'zone0' in list(odict.keys()):
             for i in itertools.count():
                 is_z = is_id = False
-                if 'zone' + str(i) in odict.keys():
+                if 'zone' + str(i) in list(odict.keys()):
                     is_z = True
-                if 'id' + str(i) in odict.keys():
+                if 'id' + str(i) in list(odict.keys()):
                     is_id = True
                 if is_z is True and is_id is True:
                     continue
@@ -416,7 +416,7 @@ class ESInject(NxInjector):
                     ignore=400 # Ignore 400 cause by IndexAlreadyExistsException when creating an index
                 )
             except Exception as idxadd_error:
-                print "Unable to create the index/collection for ES 5.X: "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+ ", Error: " + str(idxadd_error)
+                print("Unable to create the index/collection for ES 5.X: "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+ ", Error: " + str(idxadd_error))
             try:
                 self.es.indices.put_mapping(
                     index=self.cfg["elastic"]["index"],
@@ -441,7 +441,7 @@ class ESInject(NxInjector):
                         }
                 })
             except Exception as mapset_error:
-                print "Unable to set mapping on index/collection for ES 5.X: "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+", Error: "+str(mapset_error)
+                print("Unable to set mapping on index/collection for ES 5.X: "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+", Error: "+str(mapset_error))
                 return
         else:
             try:
@@ -458,7 +458,7 @@ class ESInject(NxInjector):
                     ignore=409 # 409 - conflict - would be returned if the document is already there
                 )
             except Exception as idxadd_error:
-                print "Unable to create the index/collection : "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+", Error: "+str(idxadd_error)
+                print("Unable to create the index/collection : "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+", Error: "+str(idxadd_error))
                 return
             try:
                 self.es.indices.put_mapping(
@@ -481,7 +481,7 @@ class ESInject(NxInjector):
                         }
                 })
             except Exception as mapset_error:
-                print "Unable to set mapping on index/collection : "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+", Error: "+str(mapset_error)
+                print("Unable to set mapping on index/collection : "+self.cfg["elastic"]["index"]+" "+self.cfg["elastic"]["doctype"]+", Error: "+str(mapset_error))
                 return
 
 
@@ -497,22 +497,22 @@ class ESInject(NxInjector):
                 entry['whitelisted'] = "false"
                 entry['comments'] = "import:"+str(datetime.datetime.now())
                 # go utf-8 ?
-                for x in entry.keys():
-                    if isinstance(entry[x], basestring):
-                        entry[x] = unicode(entry[x], errors='replace')
+                for x in list(entry.keys()):
+                    if isinstance(entry[x], str):
+                        entry[x] = str(entry[x], errors='replace')
                 items.append(entry)
                 count += 1
         mapfunc = partial(json.dumps, ensure_ascii=False)
         try:
             full_body = "\n".join(map(mapfunc,items)) + "\n"
         except:
-            print "Unexpected error:", sys.exc_info()[0]
-            print "Unable to json.dumps : "
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Unable to json.dumps : ")
             pprint.pprint(items)
         bulk(self.es, items, index=self.cfg["elastic"]["index"], doc_type="events", raise_on_error=True)
         self.total_commits += count
         logging.debug("Written "+str(self.total_commits)+" events")
-        print "Written "+str(self.total_commits)+" events"
+        print("Written "+str(self.total_commits)+" events")
         del self.nlist[0:len(self.nlist)]
 
 

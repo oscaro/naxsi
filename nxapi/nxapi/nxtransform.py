@@ -9,7 +9,7 @@ import datetime
 import glob
 import sys
 
-from nxtypificator import Typificator
+from .nxtypificator import Typificator
 
 class NxConfig():
     """ Simple configuration loader """
@@ -47,8 +47,8 @@ class NxRating():
         self.stats['rule'] = {}
     def refresh_scope(self, scope, esq):
         """ drops all datas for a named scope """
-        if scope not in self.esq.keys():
-            print "Unknown scope ?!"+scope
+        if scope not in list(self.esq.keys()):
+            print("Unknown scope ?!"+scope)
         self.esq[scope] = esq
         self.stats[scope] = {}
     def query_ratio(self, scope, scope_small, score, force_refresh):
@@ -59,12 +59,12 @@ class NxRating():
     def get(self, scope, score, scope_small=None, force_refresh=False):
         """ fetch a value from self.stats or query ES """
         #print "#GET:"+scope+"_?"+str(scope_small)+"?_"+score+" = ?"
-        if scope not in self.stats.keys():
+        if scope not in list(self.stats.keys()):
             #print "unknown scope :"+scope
             return None
         if scope_small is not None:
             return self.query_ratio(scope, scope_small, score, force_refresh)
-        elif score in self.stats[scope].keys() and force_refresh is False:
+        elif score in list(self.stats[scope].keys()) and force_refresh is False:
             return self.stats[scope][score]
         else:
             if score is not 'total':
@@ -93,7 +93,7 @@ class NxRating():
         for sdeny in [tpl_deny, glb_deny]:
             if sdeny is None:
                 continue
-            for k in sdeny.keys():
+            for k in list(sdeny.keys()):
                 res = self.check_rule(k, sdeny[k])
                 if res['check'] is True:
 #                    print "WE SHOULD DENY THAT"
@@ -102,29 +102,29 @@ class NxRating():
         for scheck in [glb_success, tpl_success]:
             if scheck is None:
                 continue
-            for k in scheck.keys():
+            for k in list(scheck.keys()):
                 res = self.check_rule(k, scheck[k])
                 if res['check'] is True:
                     if debug is True:
-                        print "[SUCCESS] OK, on "+k+" vs "+str(res['curr'])+", check :"+str(scheck[k][0])+" - "+str(scheck[k][1])
+                        print("[SUCCESS] OK, on "+k+" vs "+str(res['curr'])+", check :"+str(scheck[k][0])+" - "+str(scheck[k][1]))
                     success.append({'key' : k, 'criteria' : scheck[k], 'curr' : res['curr']})
                 else:
                     if debug is True:
-                        print "[SUCCESS] KO, on "+k+" vs "+str(res['curr'])+", check :"+str(scheck[k][0])+" - "+str(scheck[k][1])
+                        print("[SUCCESS] KO, on "+k+" vs "+str(res['curr'])+", check :"+str(scheck[k][0])+" - "+str(scheck[k][1]))
                     failed_tests["success"].append({'key' : k, 'criteria' : scheck[k], 'curr' : res['curr']})
                 
         for fcheck in [glb_warnings, tpl_warnings]:
             if fcheck is None:
                 continue
-            for k in fcheck.keys():
+            for k in list(fcheck.keys()):
                 res = self.check_rule(k, fcheck[k])
                 if res['check'] is True:
                     if debug is True:
-                        print "[WARNINGS] TRIGGERED, on "+k+" vs "+str(res['curr'])+", check :"+str(fcheck[k][0])+" - "+str(fcheck[k][1])
+                        print("[WARNINGS] TRIGGERED, on "+k+" vs "+str(res['curr'])+", check :"+str(fcheck[k][0])+" - "+str(fcheck[k][1]))
                     warning.append({'key' : k, 'criteria' : fcheck[k], 'curr' : res['curr']})
                 else:
                     if debug is True:
-                        print "[WARNINGS] NOT TRIGGERED, on "+k+" vs "+str(res['curr'])+", check :"+str(fcheck[k][0])+" - "+str(fcheck[k][1])
+                        print("[WARNINGS] NOT TRIGGERED, on "+k+" vs "+str(res['curr'])+", check :"+str(fcheck[k][0])+" - "+str(fcheck[k][1]))
                     failed_tests["warnings"].append({'key' : k, 'criteria' : fcheck[k], 'curr' : res['curr']})
         x = { 'success' : success,
               'warnings' : warning,
@@ -156,7 +156,7 @@ class NxRating():
             #Xpprint.pprint()
             return {'curr' : x, 'check' : check(int(self.get(scope, score, scope_small=scope_small)), int(beat))}
         else:
-            print "cannot understand rule ("+label+"):",
+            print("cannot understand rule ("+label+"):", end=' ')
             pprint.pprint(check_rule)
             return { 'curr' : 0, 'check' : False }
 
@@ -177,15 +177,15 @@ class NxTranslate():
         self.core_msg = {}
         # by default, es queries will return 1000 results max
         self.es_max_size = self.cfg.get("elastic").get("max_size", 1000)
-        print "# size :"+str(self.es_max_size)
+        print("# size :"+str(self.es_max_size))
         # purely for output coloring
-        self.red = u'{0}'
-        self.grn = u'{0}'
-        self.blu = u'{0}'
+        self.red = '{0}'
+        self.grn = '{0}'
+        self.blu = '{0}'
         if self.cfg["output"]["colors"] == "true":
-            self.red = u"\033[91m{0}\033[0m"
-            self.grn = u"\033[92m{0}\033[0m"
-            self.blu = u"\033[94m{0}\033[0m"
+            self.red = "\033[91m{0}\033[0m"
+            self.grn = "\033[92m{0}\033[0m"
+            self.blu = "\033[94m{0}\033[0m"
         # Attempt to parse provided core rules file
         self.load_cr_file(self.cfg["naxsi"]["rules_path"])
 
@@ -242,28 +242,28 @@ class NxTranslate():
 
     def wl_on_type(self):
         for rule in Typificator(self.es, self.cfg).get_rules():
-            print 'BasicRule negative "rx:{0}" "msg:{1}" "mz:${2}_VAR:{3}" "s:BLOCK";'.format(*rule)
+            print('BasicRule negative "rx:{0}" "msg:{1}" "mz:${2}_VAR:{3}" "s:BLOCK";'.format(*rule))
 
     def fancy_display(self, full_wl, scores, template=None):
         output = []
-        if template is not None and '_msg' in template.keys():
+        if template is not None and '_msg' in list(template.keys()):
             output.append("#msg: {0}\n".format(template['_msg']))
         rid = full_wl['rule'].get('id', "0")
         output.append("#Rule ({0}) {1}\n".format(rid, self.core_msg.get(rid, 'Unknown ..')))
         if self.cfg["output"]["verbosity"] >= 4:
             output.append("#total hits {0}\n".format(full_wl['total_hits']))
             for x in ["content", "peers", "country", "uri", "var_name"]:
-                if x not in full_wl.keys():
+                if x not in list(full_wl.keys()):
                     continue
                 for y in full_wl[x]:
-                    output.append("#{0} : {1}\n".format(x, unicode(y).encode("utf-8", 'replace')))
+                    output.append("#{0} : {1}\n".format(x, str(y).encode("utf-8", 'replace')))
         return ''.join(output)
 
 #        pprint.pprint(scores)
         for x in scores['success']:
-            print "# success : "+self.grn.format(str(x['key'])+" is "+str(x['curr']))
+            print("# success : "+self.grn.format(str(x['key'])+" is "+str(x['curr'])))
         for x in scores['warnings']:
-            print "# warnings : "+self.grn.format(str(x['key'])+" is "+str(x['curr']))
+            print("# warnings : "+self.grn.format(str(x['key'])+" is "+str(x['curr'])))
 
         pass
     def expand_tpl_path(self, template):
@@ -301,11 +301,11 @@ class NxTranslate():
         except:
             logging.error("Unable to load json from '"+tpl_s+"'")
             return None
-        if '_success' in template.keys():
+        if '_success' in list(template.keys()):
             template['_success'] = self.normalize_checks(template['_success'])
-        if '_warnings' in template.keys():
+        if '_warnings' in list(template.keys()):
             template['_warnings'] = self.normalize_checks(template['_warnings'])
-        if '_deny' in template.keys():
+        if '_deny' in list(template.keys()):
             template['_deny'] = self.normalize_checks(template['_deny'])
         #return self.tpl_append_gfilter(template)
         return template
@@ -349,9 +349,9 @@ class NxTranslate():
             "size" : self.es_max_size
             }
         # A hack in case we were inadvertently given an esq
-        if 'query' in ob.keys():
+        if 'query' in list(ob.keys()):
             return ob
-        for k in ob.keys():
+        for k in list(ob.keys()):
             if k.startswith("_"):
                 continue
             # if key starts with '?' :
@@ -425,7 +425,7 @@ class NxTranslate():
                     if wl_id.find("-") != -1:
                         wl_id = wl_id.replace("-", "")
                         #print "Negative query."
-                        if not 'must_not' in esq['query']['bool'].keys():
+                        if not 'must_not' in list(esq['query']['bool'].keys()):
                             esq['query']['bool']['must_not'] = []
                         esq['query']['bool']['must_not'].append({"match" : { "id" : wl_id}})
                     else:
@@ -482,7 +482,7 @@ class NxTranslate():
                 elif zone == "URL":
                     tpl.append({"match" : { "uri" : var_name }})
                 else:
-                    print "huh, what's that ? "+zone
+                    print("huh, what's that ? "+zone)
 
             # |<ZONE>
             else:
@@ -500,8 +500,8 @@ class NxTranslate():
         to a valid BasicRule. """
         tname = False
         zone = ""
-        if template is not None and '_statics' in template.keys():
-            for x in template['_statics'].keys():
+        if template is not None and '_statics' in list(template.keys()):
+            for x in list(template['_statics'].keys()):
                 rule[x] = template['_statics'][x]
 
         wl = "BasicRule "
@@ -533,7 +533,7 @@ class NxTranslate():
         """ fetch top items for a given field,
         clears the field if exists in gfilters """
         x = None
-        if field in template.keys():
+        if field in list(template.keys()):
             x = template[field]
             del template[field]
         esq = self.tpl2esq(template)
@@ -544,7 +544,7 @@ class NxTranslate():
         elif self.cfg["elastic"].get("version", None) in ["2", "5"]:
             esq['aggregations'] =  { "agg1" : {"terms": { "field": field, "size" : self.es_max_size} }}
         else:
-            print "Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED"))
+            print("Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED")))
             sys.exit(1)
             
         res = self.search(esq)
@@ -554,7 +554,7 @@ class NxTranslate():
         elif self.cfg["elastic"].get("version", None) in ["2", "5"]:
             total = res['hits']['total']
         else:
-            print "Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED"))
+            print("Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED")))
             sys.exit(1)
 
         count = 0
@@ -572,7 +572,7 @@ class NxTranslate():
                 if count > limit:
                     break
         else:
-            print "Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED"))
+            print("Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED")))
             sys.exit(1)
         return ret
 
@@ -587,7 +587,7 @@ class NxTranslate():
         elif self.cfg["elastic"].get("version", None) in ["2", "5"]:
             esq['aggregations'] =  { "agg1" : {"terms": { "field": key, "size" : 50000} }}
         else:
-            print "Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED"))
+            print("Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED")))
             sys.exit(1)
 
         res = self.search(esq)
@@ -600,7 +600,7 @@ class NxTranslate():
                 if x['key'] not in uniques:
                     uniques.append(x['key'])
         else:
-            print "Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED"))
+            print("Unknown / Unspecified ES version in nxapi.json : {0}".format(self.cfg["elastic"].get("version", "#UNDEFINED")))
             sys.exit(1)
             
         return { 'list' : uniques, 'total' :  len(uniques) }
@@ -611,14 +611,14 @@ class NxTranslate():
         debug = False
         
         if debug is True:
-            print "#SEARCH:PARAMS:index="+self.cfg["elastic"]["index"]+", doc_type="+self.cfg["elastic"]["doctype"]+", body=",
-            print "#SEARCH:QUERY:",
+            print("#SEARCH:PARAMS:index="+self.cfg["elastic"]["index"]+", doc_type="+self.cfg["elastic"]["doctype"]+", body=", end=' ')
+            print("#SEARCH:QUERY:", end=' ')
             pprint.pprint (esq)
         if len(esq["query"]["bool"]["must"]) == 0:
             del esq["query"]
         x = self.es.search(index=self.cfg["elastic"]["index"], doc_type=self.cfg["elastic"]["doctype"], body=esq)
         if debug is True:
-            print "#RESULT:",
+            print("#RESULT:", end=' ')
             pprint.pprint(x)
         return x
     def normalize_checks(self, tpl):
@@ -631,8 +631,8 @@ class NxTranslate():
             '<=' : operator.le
             }
         
-        for tpl_key in tpl.keys():
-            for token in replace.keys():
+        for tpl_key in list(tpl.keys()):
+            for token in list(replace.keys()):
                 if tpl[tpl_key][0] == token:
                     tpl[tpl_key][0] = replace[token]
         return tpl
@@ -641,11 +641,11 @@ class NxTranslate():
         count = 0
         total_events = 0
         esq["size"] = "0"
-        print "TAG RULE :",
+        print("TAG RULE :", end=' ')
         pprint.pprint(esq)
         x = self.search(esq)
         total_events = int(str(x["hits"]["total"]))
-        print str(self.grn.format(total_events)) + " items to be tagged ..."
+        print(str(self.grn.format(total_events)) + " items to be tagged ...")
         size = int(x['hits']['total'])
         if size > 20000:
             size = size / 100
@@ -667,12 +667,12 @@ class NxTranslate():
                 if tag is True:
                     self.index(body, eid)
                 else:
-                    print eid+",",
+                    print(eid+",", end=' ')
                 count += 1
-            print "Tagged {0} events out of {1}".format(count, total_events)
+            print("Tagged {0} events out of {1}".format(count, total_events))
             if total_events - count < size:
                 size = total_events - count
-        print ""
+        print("")
         #--
         if not tag or tag is False:
             return 0
@@ -684,19 +684,19 @@ class NxTranslate():
         """ recursive whitelist generation function,
         returns a list of all possible witelists. """
         retlist = []
-        for tpl_key in tpl.keys():
-            if tpl_key in rule.keys():
+        for tpl_key in list(tpl.keys()):
+            if tpl_key in list(rule.keys()):
                 continue
             if tpl_key[0] in ['_', '?']:
                 continue
             if tpl[tpl_key] == '?':
                 continue
             rule[tpl_key] = tpl[tpl_key]
-        for tpl_key in tpl.keys():
+        for tpl_key in list(tpl.keys()):
             if tpl_key.startswith('_'):
                 continue
             elif tpl_key.startswith('?'):
-                if tpl_key[1:] in rule.keys():
+                if tpl_key[1:] in list(rule.keys()):
                     continue
                 unique_vals = self.fetch_uniques(rule, tpl_key[1:])['list']
                 for uval in unique_vals:
@@ -704,14 +704,14 @@ class NxTranslate():
                     retlist += self.gen_wl(tpl, copy.copy(rule))
                 return retlist
             elif tpl[tpl_key] == '?':
-                if tpl_key in rule.keys():
+                if tpl_key in list(rule.keys()):
                     continue
                 unique_vals = self.fetch_uniques(rule, tpl_key)['list']
                 for uval in unique_vals:
                     rule[tpl_key] = uval
                     retlist += self.gen_wl(tpl, copy.copy(rule))
                 return retlist
-            elif tpl_key not in rule.keys():
+            elif tpl_key not in list(rule.keys()):
                 rule[tpl_key] = tpl[tpl_key]
                 retlist += self.gen_wl(tpl, copy.copy(rule))
                 return retlist

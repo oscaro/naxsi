@@ -12,14 +12,14 @@ data_files = [('/usr/local/nxapi/', ['nx_datas/country2coords.txt']),
 for dirname, dirnames, filenames in os.walk('tpl/'):
     for filename in filenames:
         if filename.endswith(".tpl"):
-            print dirname+"#"+filename
-            if "/usr/local/nxapi/"+dirname not in f.keys():
+            print(dirname+"#"+filename)
+            if "/usr/local/nxapi/"+dirname not in list(f.keys()):
                 
                 f["/usr/local/nxapi/"+dirname] = []
                 
             f["/usr/local/nxapi/"+dirname].append(os.path.join(dirname, filename))
 
-for z in f.keys():
+for z in list(f.keys()):
     data_files.append( (z, f[z]))
 
 

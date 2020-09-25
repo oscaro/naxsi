@@ -35,14 +35,14 @@ def open_fifo(fifo):
         os.mkfifo(fifo)
     except OSError:
         logging.warning("Fifo ["+fifo+"] already exists (non fatal).")
-    except Exception, e:
+    except Exception as e:
         logging.error("Unable to create fifo ["+fifo+"]")
     try:
         logging.debug("Opening fifo ... will return when data is available.")
         fifo_fd = open(fifo, 'r')
         fcntl.fcntl(fifo_fd, F_SETPIPE_SZ, 1000000)
         logging.debug("Pipe (modified) size : "+str(fcntl.fcntl(fifo_fd, F_GETPIPE_SZ)))
-    except Exception, e:
+    except Exception as e:
         logging.error("Unable to create fifo, error: "+str(e))
         return None
     return fifo_fd
@@ -325,7 +325,7 @@ def write_generated_wl(filename, results):
 
     with open('/tmp/{0}'.format(filename), 'w') as wl_file:
         for result in results:
-            for key, items in result.iteritems():
+            for key, items in result.items():
                 if items:
                     logging.debug("{} {}".format(key, items))
                     if key == 'genrule':
@@ -377,7 +377,7 @@ def ask_user_for_selection(editor, welcome_sentences, selection, servers):
     return ret
 
 def generate_wl(selection_dict):
-    for key, items in selection_dict.iteritems():
+    for key, items in selection_dict.items():
         if not items:
             return False
         global_filters_context = cfg.cfg["global_filters"]

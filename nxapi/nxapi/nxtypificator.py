@@ -42,7 +42,7 @@ class Typificator(object):
         while nb_samples:
             if not data:
                 body = {'query': {}}
-                for k,v in self.cfg['global_filters'].iteritems():
+                for k,v in self.cfg['global_filters'].items():
                     body['query'].update({'match':{k:v}})
                 data = self.es_instance.search(index=self.cfg["elastic"]["index"], doc_type='events',
                                                size=size, from_=position,
@@ -75,7 +75,7 @@ class Typificator(object):
                 content = line['content']
                 var_name = line['var_name']
             except KeyError as e:
-                print 'Error with : {0} ({1})'.format(line, e)
+                print('Error with : {0} ({1})'.format(line, e))
                 continue
 
             if not var_name:  # No types for empty varnames.
@@ -87,8 +87,8 @@ class Typificator(object):
             while not regexps[rules[zone][var_name]].match(content):
                 rules[zone][var_name] += 1
 
-        for zone, zone_data in rules.iteritems():
-            for var_name, index in zone_data.iteritems():
+        for zone, zone_data in rules.items():
+            for var_name, index in zone_data.items():
                 if index < len(REGEXPS) - 1:  #  Don't return untyped things
                     yield [REGEXPS[index][0], REGEXPS[index][1], zone, var_name]
 
@@ -98,4 +98,4 @@ if __name__ == '__main__':
     nb_samples = 1e6 if len(sys.argv) == 1 else int(sys.argv[1])
     
     for rule in Typificator().get_rules(nb_samples):
-        print 'TypeRule "rx:{0}" "msg:typed ({1}) parameter" "mz:${2}_VAR:{3}"'.format(rule[0], rule[1], rule[2], rule[3])
+        print('TypeRule "rx:{0}" "msg:typed ({1}) parameter" "mz:${2}_VAR:{3}"'.format(rule[0], rule[1], rule[2], rule[3]))
